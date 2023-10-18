@@ -173,16 +173,24 @@ def CreateXML(out_file):
                         printmsg.print_debug(f'{head_name["name"]} = {head[head_name["name"]]}')
 
                 # Write sp values
-                _xml_ItemSP = ET.SubElement(_xml_Item, "itemsp")
-                _xml_ItemSP.set("itemspid", appsettings.XML_ItemSpId)
+                _sp_exist = False
                 for sp in sp_list:
-                    printmsg.print_debug(f"========SP==========")
-                    _xml_Item2 = ET.SubElement(_xml_ItemSP, "item")
                     for sp_name in sp_column_sp_list:
-                        if (appsettings.SkipEmptyAttr and len(
-                                sp[sp_name["name"]]) != 0) or not appsettings.SkipEmptyAttr:
-                            _xml_Item2.set(sp_name["name"], sp[sp_name["name"]])
-                            printmsg.print_debug(f' {sp_name["name"]} = {sp[sp_name["name"]]}')
+                        if len(sp[sp_name["name"]]) > 0:
+                            _sp_exist = True
+                            break
+                # IF SP Exist
+                if _sp_exist:
+                    _xml_ItemSP = ET.SubElement(_xml_Item, "itemsp")
+                    _xml_ItemSP.set("itemspid", appsettings.XML_ItemSpId)
+                    for sp in sp_list:
+                        printmsg.print_debug(f"========SP==========")
+                        _xml_Item2 = ET.SubElement(_xml_ItemSP, "item")
+                        for sp_name in sp_column_sp_list:
+                            if (appsettings.SkipEmptyAttr and len(
+                                    sp[sp_name["name"]]) != 0) or not appsettings.SkipEmptyAttr:
+                                _xml_Item2.set(sp_name["name"], sp[sp_name["name"]])
+                                printmsg.print_debug(f' {sp_name["name"]} = {sp[sp_name["name"]]}')
 
         # XML: end write
         _xml_tree = ET.ElementTree(_xml_root)  # записываем дерево в файл
