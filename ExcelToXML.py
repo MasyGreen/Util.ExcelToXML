@@ -7,9 +7,10 @@ from colorama import Fore
 import configparser
 from xml.etree import ElementTree as ET
 
-
-# Addition class - print message/Дополнительный класс красивой печати типовых сообщений
 class PrintMsg:
+    """
+    Addition class - print message/Дополнительный класс красивой печати типовых сообщений
+    """
     def __init__(self):
         self.IsPrintDebug: bool = False
 
@@ -30,8 +31,10 @@ class PrintMsg:
             print(f'{Fore.MAGENTA}{value}{Fore.WHITE}')
 
 
-# Addition class - settings/Дополнительный класс хранения настроек из CFG
 class AppSettings:
+    """
+    Addition class - settings/Дополнительный класс хранения настроек из CFG
+    """
     def __init__(self):
         self.NumColumnHeadKey: int = 0
         self.IsPrintDebug: bool = False
@@ -44,28 +47,38 @@ class AppSettings:
         return f'AppSettings: {self.__dict__} '
 
 
-# Get name class.var to lower. Template: valuename=
-# Params f"{appsettings.Server=}" => appsettings.Server
 def get_value_name_low(variable):
+    """
+    Get value/Получить значение настройки
+    :param variable: Name like f"{appsettings.Server=}" => appsettings.Server
+    :return: value
+    """
     var_str = variable.split('=')[0].lower()
     return var_str
 
 
-# Get name class.var to lower. Template: classname.valuename=
-# Params f"{appsettings.Server=}" => Server
 def get_class_value_name_low(variable):
+    """
+    Get name class.var to lower. Template: classname.valuename=/Получить имя настройки с нижнем регистре
+    :param variable: Name like f"{appsettings.Server=}" => Server
+    :return: lower case var name
+    """
     var_str = get_value_name_low(variable)
     var_str = var_str.split('.')[1]
     return var_str
 
 
 # Read config file/Чтение конфигурационного файла
-def read_config(filepath):
-    if os.path.exists(filepath):
+def read_config(config_file_path):
+    """
+    Read exist file or create new whit default value/Прочитать или создать конфигурационный файл
+    :param config_file_path: Config file full path
+    """
+    if os.path.exists(config_file_path):
         printmsg.print_header(f'Start ReadConfig')
 
         config = configparser.ConfigParser()
-        config.read(filepath, "utf8")
+        config.read(config_file_path, "utf8")
         config.sections()
 
         var_settings_name = get_class_value_name_low(f"{appsettings.NumColumnHeadKey=}")
@@ -97,7 +110,7 @@ def read_config(filepath):
             "Settings",
             var_settings_name) or False
 
-        printmsg.print_success(f'Read config: {filepath}')
+        printmsg.print_success(f'Read config: {config_file_path}')
         return True
     else:
         printmsg.print_header(f'Start create config')
@@ -122,17 +135,21 @@ def read_config(filepath):
         var_settings_name = get_class_value_name_low(f"{appsettings.SkipEmptyAttr=}")
         config.set("Settings", var_settings_name, 'false')
 
-        with open(filepath, "w") as config_file:
+        with open(config_file_path, "w") as config_file:
             config.write(config_file)
 
-        printmsg.print_success(f'Create config: {filepath}')
+        printmsg.print_success(f'Create config: {config_file_path}')
 
         return False
 
 
-def CreateXML(out_file):
+def CreateXML(out_file_path):
+    """
+    Create result XML file/Создать результирующий файл XML
+    :param out_file_path: Output file full path
+    """
     printmsg.print_header(f"=======================================")
-    printmsg.print_service_message(f"DEF WritingXML  - {out_file}")
+    printmsg.print_service_message(f"DEF WritingXML  - {out_file_path}")
 
     # Get key value
     key_column_name = list((i["name"] for i in list(DataHeader) if i["index"] == appsettings.NumColumnHeadKey))[0]
@@ -198,17 +215,21 @@ def CreateXML(out_file):
         if appsettings.IsPrettyPrint:
             xmlstr = minidom.parseString(ET.tostring(_xml_root)).toprettyxml(indent="   ")
 
-            with open(out_file, "w") as f:
+            with open(out_file_path, "w") as f:
                 f.write(xmlstr)
         else:
-            _xml_tree.write(out_file, encoding='utf-8', xml_declaration=True, method='xml')  # сохраняем файл
-            _xml_tree.write(out_file, encoding='utf-8', xml_declaration=True, method='xml')  # сохраняем файл
+            _xml_tree.write(out_file_path, encoding='utf-8', xml_declaration=True, method='xml')  # сохраняем файл
+            _xml_tree.write(out_file_path, encoding='utf-8', xml_declaration=True, method='xml')  # сохраняем файл
 
 
-def ParsingXLSX(in_file):
+def ParsingXLSX(in_file_path):
+    """
+    Read Excel file/Прочитать Excel файл
+    :param in_file_path: In Excel file full path
+    """
     printmsg.print_header(f"=======================================")
-    printmsg.print_service_message(f"DEF ParsingXLSX - {in_file}")
-    workbook = load_workbook(filename=in_file)
+    printmsg.print_service_message(f"DEF ParsingXLSX - {in_file_path}")
+    workbook = load_workbook(filename=in_file_path)
     sheet = workbook.active
     printmsg.print_service_message(f"File Count: row = {sheet.max_row}, column = {sheet.max_column}")
 
@@ -222,9 +243,9 @@ def ParsingXLSX(in_file):
             first_in = False
             u_max_row = i
 
-    # Read from space Column (first Row)
+    # Read from space Column (first Row, empty value)
     first_in = True
-    u_max_col = sheet.max_column
+    u_max_col = sheet.max_column + 1
     for i in range(1, int(sheet.max_column)):
         if first_in and not sheet.cell(row=1, column=i).value:
             first_in = False
@@ -274,10 +295,13 @@ def main():
             # Input file
             printmsg.print_header(f"Input: {in_file}")
 
-            # Parse file
             DataSetXLSX.clear()  # clear dataset
             DataHeader.clear()  # clear header
+
+            # Parse file
             ParsingXLSX(os.path.join(os.getcwd(), in_file))
+
+            # Create XML
             out_file = os.path.join(os.getcwd(), f"{os.path.splitext(in_file)[0]}.xml")
             CreateXML(out_file)
 
@@ -298,10 +322,9 @@ if __name__ == '__main__':
         DataSetProcess = []
 
         main()
-
-        printmsg.print_success(f"\n\n*All Process done.\n*Press Space to Exit ... It the longest shortcut \_(o0)_\...")
     else:
         printmsg.print_error(f'Pleas edit default Config value: {configFilePath}')
         printmsg.print_service_message(f'Process skip...')
 
+    printmsg.print_success(f"\n\n*All Process done.\n*Press Space to Exit ... It the longest shortcut \_(o0)_\...")
     keyboard.wait("space")
